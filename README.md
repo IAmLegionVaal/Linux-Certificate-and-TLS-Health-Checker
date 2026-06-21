@@ -1,46 +1,42 @@
 # Linux Certificate and TLS Health Checker
 
-A read-only Bash toolkit for auditing local X.509 certificate files and testing remote TLS endpoints.
+A Linux support toolkit for auditing certificate and TLS health and applying selected guarded repairs.
 
-## Checks performed
-
-- Certificate subject, issuer, serial number, validity dates, and fingerprints
-- Expiry status and configurable warning thresholds
-- Subject Alternative Names and Extended Key Usage
-- PEM and DER certificate parsing
-- Local certificate file permissions and ownership
-- Remote TLS handshake, negotiated protocol, cipher, certificate chain, and verification result
-- Optional tests for TLS 1.2 and TLS 1.3 support
-- Text, CSV, and JSON reports
-
-## Usage
-
-Audit common local certificate locations:
+## Diagnostic script
 
 ```bash
 chmod +x src/certificate_tls_health.sh
-sudo ./src/certificate_tls_health.sh
+sudo ./src/certificate_tls_health.sh --path /etc/nginx/certs --host example.com --port 443
 ```
 
-Audit a specific path and remote endpoint:
+## Repair script
 
 ```bash
-sudo ./src/certificate_tls_health.sh --path /etc/nginx/certs --host example.com --port 443 --warn-days 30
+chmod +x src/certificate_tls_repair.sh
+sudo ./src/certificate_tls_repair.sh --fix-permissions /etc/nginx/certs --dry-run
 ```
+
+Supported repairs include:
+
+```bash
+sudo ./src/certificate_tls_repair.sh --fix-permissions /etc/nginx/certs
+sudo ./src/certificate_tls_repair.sh --install-ca ./company-root.pem
+sudo ./src/certificate_tls_repair.sh --renew-certbot example.com
+sudo ./src/certificate_tls_repair.sh --restart-service nginx.service
+```
+
+## What the repair does
+
+- Corrects standard certificate and private-key modes below one selected directory.
+- Installs one validated PEM CA certificate into a supported Debian- or RHEL-style trust store.
+- Renews one selected Certbot certificate name.
+- Restarts and verifies one selected TLS-using systemd service.
+- Captures post-repair certificate, permission and service evidence.
+- Supports dry-run, confirmation prompts, logs and clear exit codes.
 
 ## Safety
 
-The script does not modify trust stores, certificates, keys, permissions, services, or TLS configuration. Private-key contents are never displayed or copied.
-
-## Privacy
-
-Certificate subjects, internal names, IP addresses, and endpoint details may be sensitive. Review reports before sharing.
-
-## Requirements
-
-- Bash 4+
-- OpenSSL
-- GNU `find`, `stat`, and `date`
+The tool never displays or copies private-key contents. Trust-store installation, certificate renewal and service restart are explicit actions. Review service configuration and certificate identity before applying changes.
 
 ## Author
 
