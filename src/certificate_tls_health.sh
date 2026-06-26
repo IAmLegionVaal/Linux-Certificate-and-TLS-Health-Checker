@@ -50,7 +50,7 @@ section() {
 
 csv_escape() {
   local value="$1"
-  value="${value//"/""}"
+  value="${value//\"/\"\"}"
   printf '"%s"' "$value"
 }
 
@@ -183,6 +183,9 @@ if [[ "$EXPIRED" -gt 0 || "$EXPIRING" -gt 0 ]] || { $REMOTE_TESTED && ! $REMOTE_
   OVERALL="Attention required"
 fi
 
+VERIFY_JSON="${VERIFY_CODE//\\/\\\\}"
+VERIFY_JSON="${VERIFY_JSON//\"/\\\"}"
+
 cat > "$JSON" <<EOF
 {
   "collected_at": "$(date -Is)",
@@ -196,7 +199,7 @@ cat > "$JSON" <<EOF
   "remote_handshake_successful": $REMOTE_HANDSHAKE,
   "tls_1_2_supported": $TLS12,
   "tls_1_3_supported": $TLS13,
-  "verification_result": "${VERIFY_CODE//"/\\"}",
+  "verification_result": "$VERIFY_JSON",
   "overall_status": "$OVERALL"
 }
 EOF

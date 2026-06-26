@@ -57,7 +57,10 @@ VERIFY="$OUTPUT_DIR/verification.txt"
 
 log(){ printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" | tee -a "$LOG"; }
 confirm(){ $ASSUME_YES && return 0; read -r -p "$1 [y/N]: " answer; case "$answer" in y|Y|yes|YES) return 0;; *) return 1;; esac; }
-run_action(){ local d="$1"; shift; ACTIONS=$((ACTIONS+1)); log "$d"; if $DRY_RUN; then printf 'DRY-RUN:' >>"$LOG"; printf ' %q' "$@" >>"$LOG"; printf '\n' >>"$LOG"; return 0; fi; if "$@" >>"$LOG" 2>&1; then log "SUCCESS: $d"; else FAILURES=$((FAILURES+1)); log "WARNING: $d failed"; return 1; fi; }
+run_action(){ local d="$1"; shift; ACTIONS=$((ACTIONS+1)); log "$d"; if $DRY_RUN; then
+    { printf 'DRY-RUN:'; printf ' %q' "$@"; printf '\n'; } >>"$LOG"
+    return 0
+  fi; if "$@" >>"$LOG" 2>&1; then log "SUCCESS: $d"; else FAILURES=$((FAILURES+1)); log "WARNING: $d failed"; return 1; fi; }
 run_root(){ local d="$1"; shift; if [ "$(id -u)" -eq 0 ]; then run_action "$d" "$@"; else run_action "$d" sudo "$@"; fi; }
 verify(){ { echo "Collected: $(date -Is)"; [ -n "$FIX_PATH" ] && find "$FIX_PATH" -maxdepth 2 -type f \( -name '*.crt' -o -name '*.pem' -o -name '*.key' \) -printf '%m %u:%g %p\n' 2>/dev/null; [ -n "$INSTALL_CA" ] && openssl x509 -in "$INSTALL_CA" -noout -subject -issuer -dates -fingerprint -sha256 2>&1; [ -n "$RESTART_SERVICE" ] && systemctl status "$RESTART_SERVICE" --no-pager -l 2>&1; $RENEW_CERTBOT && certbot certificates 2>&1; } >"$VERIFY"; }
 
